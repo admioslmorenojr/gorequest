@@ -47,6 +47,8 @@ type SuperAgent struct {
 	Errors     []error
 }
 
+var typeOfBytes = reflect.TypeOf([]byte(nil))
+
 // Used to create a new SuperAgent object.
 func New() *SuperAgent {
 	cookiejarOptions := cookiejar.Options{
@@ -343,8 +345,24 @@ func (s *SuperAgent) Send(content interface{}) *SuperAgent {
 		s.SendString(v.String())
 	case reflect.Struct:
 		s.sendStruct(v.Interface())
+	case reflect.Slice:
+		if v.Type() == typeOfBytes {
+			s.sendByteArray(v.Interface())
+		}
 	default:
 		// TODO: leave default for handling other types in the future such as number, byte, etc...
+	}
+	return s
+}
+
+// sendByteArray (similar to SendString) returns SuperAgent's itself for any next chain and takes content []byte as a parameter.
+// Its duty is to transfrom .([]byte) into s.Data (map[string]interface{}) which later changes into appropriate format such as json, form, text, etc. in the End() func.
+func (s *SuperAgent) sendByteArray(content []byte) *SuperAgent {
+	var val map[string]interface{}
+	if err := json.Unmarshal(content, &val); err == nil {
+		for k, v := range val {
+			s.Data[k] = v
+		}
 	}
 	return s
 }
