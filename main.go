@@ -347,7 +347,7 @@ func (s *SuperAgent) Send(content interface{}) *SuperAgent {
 		s.sendStruct(v.Interface())
 	case reflect.Slice:
 		if v.Type() == typeOfBytes {
-			s.sendByteArray(v.Interface())
+			s.sendByteArray(v.Interface().([]byte))
 		}
 	default:
 		// TODO: leave default for handling other types in the future such as number, byte, etc...
